@@ -13,7 +13,7 @@ if uploaded_file is not None:
 
     # fetch unique users
     user_list = df['user'].unique().tolist()
-    user_list.remove('group_notification')
+    if 'group_notification' in user_list: user_list.remove('group_notification')
     user_list.sort()
     user_list.insert(0,"Overall")
 
@@ -115,18 +115,29 @@ if uploaded_file is not None:
         st.pyplot(fig)
 
         # emoji analysis
-        emoji_df = helper.emoji_helper(selected_user,df)
-        st.title("Emoji Analysis")
+        emoji_df = helper.emoji_helper(selected_user, df)
 
-        col1,col2 = st.columns(2)
+        # *** FIX: CHECK IF THE DATAFRAME IS EMPTY BEFORE RENAMING/PLOTTING ***
+        if not emoji_df.empty:
+            # This line only runs if the DataFrame has data (emojis were found)
+            emoji_df.columns = ['emoji', 'count']
 
-        with col1:
-            st.dataframe(emoji_df)
-        with col2:
-            fig,ax = plt.subplots()
-            ax.pie(emoji_df[1].head(),labels=emoji_df[0].head(),autopct="%0.2f")
-            st.pyplot(fig)
+            st.title("Emoji Analysis")
 
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.dataframe(emoji_df)
+            with col2:
+                fig, ax = plt.subplots()
+                # Ensure we only plot the top 5 if there are at least 5 rows
+                plot_df = emoji_df.head()
+                ax.pie(plot_df['count'], labels=plot_df['emoji'], autopct="%0.2f")
+                st.pyplot(fig)
+        else:
+            # Display a message if no emojis are found
+            st.title("Emoji Analysis")
+            st.info("No emojis found in the selected chat or user's messages.")
 
 
 
